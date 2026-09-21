@@ -1,15 +1,54 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { GALLERY_WORKS } from "@/lib/content";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-6 w-6 fill-current" aria-hidden="true">
+      <path d="M8 5v14l11-7-11-7z" />
+    </svg>
+  );
+}
 
 export default function Gallery() {
   const sectionRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const reduced = useReducedMotion();
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  const openLightbox = (i: number) => {
+    videoRefs.current[i]?.pause();
+    setOpenIndex(i);
+  };
+
+  const closeLightbox = () => {
+    if (openIndex !== null) videoRefs.current[openIndex]?.play().catch(() => {});
+    setOpenIndex(null);
+  };
+
+  useEffect(() => {
+    if (openIndex === null) return;
+    document.documentElement.style.overflow = "hidden";
+    window.__lenis?.stop();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeLightbox();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.documentElement.style.overflow = "";
+      window.__lenis?.start();
+      window.removeEventListener("keydown", onKey);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openIndex]);
 
   useEffect(() => {
     const root = sectionRef.current;
@@ -81,9 +120,18 @@ export default function Gallery() {
           {GALLERY_WORKS.map((work, i) => (
             <figure
               key={work.id}
+              role="button"
+              tabIndex={0}
               data-cursor="view"
-              data-cursor-text="Ver"
-              className="group relative h-[62vh] w-[78vw] shrink-0 overflow-hidden bg-[var(--color-bg-raised)] sm:h-[68vh] sm:w-[42vw] lg:w-[30vw]"
+              data-cursor-text="Assistir"
+              onClick={() => openLightbox(i)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  openLightbox(i);
+                }
+              }}
+              className="group relative h-[62vh] w-[78vw] shrink-0 cursor-pointer overflow-hidden bg-[var(--color-bg-raised)] sm:h-[68vh] sm:w-[42vw] lg:w-[30vw]"
             >
               <video
                 ref={(el) => {
@@ -99,6 +147,9 @@ export default function Gallery() {
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.06]"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+              <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[var(--color-ink)]/70 bg-black/30 text-[var(--color-ink)] opacity-0 backdrop-blur-sm transition-opacity duration-300 group-hover:opacity-100">
+                <PlayIcon />
+              </span>
               <figcaption className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5">
                 <div>
                   <span className="label-mono text-[var(--color-blood-bright)]">
@@ -116,6 +167,53 @@ export default function Gallery() {
           ))}
         </div>
       </div>
+
+      {mounted &&
+        openIndex !== null &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/90 p-4 sm:p-10"
+            onClick={closeLightbox}
+          >
+            <button
+              type="button"
+              onClick={closeLightbox}
+              aria-label="Fechar"
+              className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full border border-[var(--color-line-strong)] text-[var(--color-ink)] transition-colors hover:border-[var(--color-blood)] hover:text-[var(--color-blood)]"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+              </svg>
+            </button>
+
+            <div
+              className="relative max-h-full max-w-3xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <video
+                key={GALLERY_WORKS[openIndex].id}
+                src={GALLERY_WORKS[openIndex].src}
+                poster={GALLERY_WORKS[openIndex].poster}
+                controls
+                autoPlay
+                loop
+                playsInline
+                className="max-h-[85vh] w-full bg-black"
+              />
+              <div className="mt-4 flex items-end justify-between gap-4">
+                <div>
+                  <span className="label-mono text-[var(--color-blood-bright)]">
+                    {GALLERY_WORKS[openIndex].technique}
+                  </span>
+                  <p className="mt-1 font-serif-italic text-lg text-[var(--color-ink)]">
+                    {GALLERY_WORKS[openIndex].caption}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </section>
   );
 }
