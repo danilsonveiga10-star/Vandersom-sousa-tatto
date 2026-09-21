@@ -1,0 +1,29 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+
+# env files
+.env*.local
+
+# pasta de fotos originais (dump da Isa) — não é código do site; as
+# fotos usadas já estão curadas e copiadas em public/images/. Fica de
+# fora do repo porque também inclui o print do Instagram e o
+# certificado da pintura, que não são para publicar.
+/Imagens/
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
