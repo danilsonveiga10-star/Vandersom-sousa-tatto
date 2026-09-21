@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import { gsap } from "@/lib/gsap";
 import { STUDIO } from "@/lib/content";
 
@@ -33,7 +34,7 @@ export default function Studio() {
           scrollTrigger: { trigger: imgWrapRef.current, start: "top 80%", once: true },
         }
       );
-      gsap.to(imgWrapRef.current!.querySelector("video"), {
+      gsap.to(imgWrapRef.current!.querySelector("img"), {
         yPercent: -8,
         ease: "none",
         scrollTrigger: {
@@ -83,16 +84,12 @@ export default function Studio() {
             ref={imgWrapRef}
             className="relative -mr-6 aspect-[3/4] w-[calc(100%+1.5rem)] overflow-hidden sm:mr-0 sm:w-full lg:-mr-16 lg:w-[calc(100%+4rem)]"
           >
-            <video
-              src="/videos/work-06.mp4"
-              poster="/images/posters/work-06.jpg"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="metadata"
-              aria-label="Águia hiper-realista no antebraço, trabalho do Vanderson"
-              className="absolute inset-0 h-full w-full object-cover"
+            <Image
+              src="/images/studio-portrait.jpg"
+              alt="Retrato hiper-realista tatuado por Vanderson, antebraço"
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="scale-110 object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
           </div>
